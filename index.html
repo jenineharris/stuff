@@ -1,0 +1,3734 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Plotting Vaccination Intention</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.6/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/hygge.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/ninjutsu.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Plotting Vaccination Intention
+## An intro to R data viz in ggplot2
+
+---
+
+
+
+
+
+---
+
+# Welcome!
+
+This is a short tutorial that will demonstrate some of the principles of plotting several common types of graphs in R using the `ggplot2` package.
+
+Before we begin, install the `tidyverse` and `here` packages:
+
+* Install the packages using the `Tools` menu and `Install packages...` menu choice 
+
+* Type the name of the packages in the dialog box that opens with a comma between them
+
+* Once installed, open the packages with the `library()` function, like this: 
+
+
+```r
+library(package = "tidyverse")
+library(package = "here")
+```
+
+---
+
+# The data set
+
+* We will be using a data that Megan collected about vaccination intention and behavior
+
+* Reminder: Save the RMD and the .csv file in the same folder on on your computer.
+
+* Import the data:
+
+
+```r
+# use here to get R to look in the same folder for the data
+here()
+```
+
+```
+Error in here(): could not find function "here"
+```
+
+```r
+# import the data
+vaxxData &lt;- read_csv("vaccine_intention.csv")
+```
+
+---
+
+# Explore the data
+
+* All the variables come in as character variables when they should be factor variables
+* A little data management can fix that, then use `summary()` to see some basic information about each variable
+
+
+```r
+# change character variable types to categorical
+vaxxData &lt;- vaxxData %&gt;%
+  mutate_if(is.character, as.factor)
+# show the data
+summary(vaxxData)
+```
+
+```
+         vaccination.intention flu.shot.history positive.test
+ Don't Know/Not sure:159       No :164          No :103      
+ No                 : 87       Yes:311          Yes:372      
+ Yes                :229                                     
+                                                             
+                                                             
+                                                             
+                                                             
+                                   innoculation.location preexisting.condition
+ Primary Care Doctor                          :246       No :352              
+ Chain Pharmacies such as Walgreens, CVS, etc.:122       Yes:123              
+ Local Health Department                      : 26                            
+ Not Applicable                               : 19                            
+ Urgent Care                                  : 15                            
+ Work                                         : 10                            
+ (Other)                                      : 37                            
+        perceived.severity                        education.level
+ Agree           :120      Bachelor's Degree              :210   
+ Disagree        :  7      Graduate School                :131   
+ Neutral         : 19      High school graduate, GED      : 42   
+ Stongly Agree   :310      Some college/Associate's Degree: 92   
+ Stongly Disagree: 19                                            
+                                                                 
+                                                                 
+         perceived.benefit             political.beliefs
+ Agree            :177     Mixed                : 82    
+ Disagree         : 47     Prefer not to answer : 25    
+ Neutral          :207     Somewhat Conservative: 86    
+ Strongly Agree   : 21     Somewhat Liberal     :114    
+ Strongly Disagree: 23     Very Conservative    : 17    
+                           Very Liberal         :151    
+                                                        
+                                                                                      perceived.barriers
+ Safety concerns with the vaccine/side effects                                                 :188     
+ None of these apply, I have no barriers or risks associated with getting the COVID-19 vaccine.: 67     
+ Safety concerns with the vaccine/side effects, Cost of the Vaccine                            : 42     
+ Safety concerns with the vaccine/side effects, Don't believe the vaccine will work            : 20     
+ Cost of the Vaccine                                                                           : 11     
+ Safety concerns with the vaccine/side effects, Concerned about getting COVID from the vaccine : 11     
+ (Other)                                                                                       :136     
+ wears.mask     perceived.susceptibility    gender         age       
+ No : 28    Agree           :203         Female:394   Min.   :18.00  
+ Yes:447    Disagree        : 58         Male  : 81   1st Qu.:22.00  
+            Neutral         :125                      Median :26.00  
+            Stongly Agree   : 70                      Mean   :34.71  
+            Stongly Disagree: 19                      3rd Qu.:47.00  
+                                                      Max.   :81.00  
+                                                                     
+  age.cat   
+ 18-29:257  
+ 30-59:174  
+ 60-74: 39  
+ 75+  :  5  
+            
+            
+            
+```
+
+---
+
+# Questions:
+
+* Once it is available, do you intend to get the vaccine for COVID-19? 
+
+* Have you received a flu shot in the past 12 months? 
+
+* Have you received a positive test for COVID-19 since the start of the pandemic?  
+
+* Which most closely aligns with your political beliefs? 
+
+* "I am at risk for contracting COVID-19" (strongly disagree-strongly agree)
+
+---
+
+# The ggplot package
+
+* Part of the `tidyverse` set of packages 
+
+* `gg` stands for grammar of graphics
+
+* Plots created in `ggplot` are built in layers 
+
+* We will look at examples of bar plots, box plots, histograms, and violin plots (as time allows)
+
+* First let's look at our variable: vaccination.intention
+
+
+---
+
+count: false
+ 
+### Basic Bar Graph
+.panel1-my_bar-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_bar-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Bar Graph
+.panel1-my_bar-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention))
+```
+]
+ 
+.panel2-my_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Bar Graph
+.panel1-my_bar-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Fancier Bar Graph
+.panel1-my_bar_colors-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_bar_colors-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Fancier Bar Graph
+.panel1-my_bar_colors-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention))
+```
+]
+ 
+.panel2-my_bar_colors-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_colors_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancier Bar Graph
+.panel1-my_bar_colors-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention)) +
+* geom_bar(fill = "slategray1")
+```
+]
+ 
+.panel2-my_bar_colors-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_colors_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancier Bar Graph
+.panel1-my_bar_colors-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention)) +
+  geom_bar(fill = "slategray1") +
+* labs(x = "Vaccination Intention ",
+*      y = "Number of People",
+*      title = "Figure 1: COVID-19 Vaccination Intention")
+```
+]
+ 
+.panel2-my_bar_colors-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_colors_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancier Bar Graph
+.panel1-my_bar_colors-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention)) +
+  geom_bar(fill = "slategray1") +
+  labs(x = "Vaccination Intention ",
+       y = "Number of People",
+       title = "Figure 1: COVID-19 Vaccination Intention") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_colors-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_colors_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_colors-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_colors-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_colors-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+# You Try it!
+
+Make a bar graph of **flu shot history** with the Figure 1 code in your R Markdown file.
+
+Edit the code to: 
+
+* Change the color of the bars by replacing "slategray1" the name of your favorite color (e.g., orange) or using a color found on the &lt;a href = "https://colorbrewer2.org/"&gt;https://colorbrewer2.org/&lt;/a&gt; website
+
+* Add labels for the axes and a title inside the quote marks
+
+* Try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+
+```r
+# Figure 1
+vaxxData %&gt;%
+  ggplot(aes(x = flu.shot.history)) +
+  geom_bar(fill = "slategray1") + 
+  labs(x = "", y = "", title = "") +
+  theme_minimal()
+```
+
+---
+
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-answer_one-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = flu.shot.history))
+```
+]
+ 
+.panel2-answer_one-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_one_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = flu.shot.history)) +
+* geom_bar(fill = "darkcyan")
+```
+]
+ 
+.panel2-answer_one-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_one_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = flu.shot.history)) +
+  geom_bar(fill = "darkcyan") +
+* labs(x = "Had a flu shot",
+*      y = "# of People",
+*      title = "Flu shot history for 475 survey participants")
+```
+]
+ 
+.panel2-answer_one-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_one_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = flu.shot.history)) +
+  geom_bar(fill = "darkcyan") +
+  labs(x = "Had a flu shot",
+       y = "# of People",
+       title = "Flu shot history for 475 survey participants") +
+* theme_classic()
+```
+]
+ 
+.panel2-answer_one-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_one_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer One
+.panel1-answer_one-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = flu.shot.history)) +
+  geom_bar(fill = "darkcyan") +
+  labs(x = "Had a flu shot",
+       y = "# of People",
+       title = "Flu shot history for 475 survey participants") +
+  theme_classic()
+```
+]
+ 
+.panel2-answer_one-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_one_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-answer_one-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-answer_one-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-answer_one-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Basic Box Plot
+.panel1-my_2var_boxplot-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_2var_boxplot-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Box Plot
+.panel1-my_2var_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention, y = age))
+```
+]
+ 
+.panel2-my_2var_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_boxplot_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Box Plot
+.panel1-my_2var_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+* geom_boxplot()
+```
+]
+ 
+.panel2-my_2var_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_boxplot_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Box Plot
+.panel1-my_2var_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_boxplot()
+```
+]
+ 
+.panel2-my_2var_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_boxplot_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_boxplot-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-adding_on-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention, y = age,
+*            fill = vaccination.intention))
+```
+]
+ 
+.panel2-adding_on-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/adding_on_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age,
+             fill = vaccination.intention)) +
+* geom_boxplot()
+```
+]
+ 
+.panel2-adding_on-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/adding_on_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age,
+             fill = vaccination.intention)) +
+  geom_boxplot() +
+* labs(x = "Vaccination Intention ",
+*      y = "Age",
+*      title = "Vaccination intention by Age")
+```
+]
+ 
+.panel2-adding_on-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/adding_on_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age,
+             fill = vaccination.intention)) +
+  geom_boxplot() +
+  labs(x = "Vaccination Intention ",
+       y = "Age",
+       title = "Vaccination intention by Age") +
+* theme(legend.position = "none")
+```
+]
+ 
+.panel2-adding_on-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/adding_on_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Adding Layers to Box Plot
+.panel1-adding_on-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age,
+             fill = vaccination.intention)) +
+  geom_boxplot() +
+  labs(x = "Vaccination Intention ",
+       y = "Age",
+       title = "Vaccination intention by Age") +
+  theme(legend.position = "none")
+```
+]
+ 
+.panel2-adding_on-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/adding_on_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-adding_on-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-adding_on-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-adding_on-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention,
+*            fill = flu.shot.history))
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention,
+             fill = flu.shot.history)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention,
+             fill = flu.shot.history)) +
+  geom_bar() +
+* scale_fill_brewer(palette = 'Set3',
+*                   name = "Flu Shot History")
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention,
+             fill = flu.shot.history)) +
+  geom_bar() +
+  scale_fill_brewer(palette = 'Set3',
+                    name = "Flu Shot History") +
+* labs(x = "Vaccine Intention",
+*      y = "Number of Individuals",
+*      title = "Figure 2: Relationship between COVID\nVaccine Intention and Flu Shot History")
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention,
+             fill = flu.shot.history)) +
+  geom_bar() +
+  scale_fill_brewer(palette = 'Set3',
+                    name = "Flu Shot History") +
+  labs(x = "Vaccine Intention",
+       y = "Number of Individuals",
+       title = "Figure 2: Relationship between COVID\nVaccine Intention and Flu Shot History") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Pretty But Not Useful Bar Plot
+.panel1-my_bar_not_useful-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention,
+             fill = flu.shot.history)) +
+  geom_bar() +
+  scale_fill_brewer(palette = 'Set3',
+                    name = "Flu Shot History") +
+  labs(x = "Vaccine Intention",
+       y = "Number of Individuals",
+       title = "Figure 2: Relationship between COVID\nVaccine Intention and Flu Shot History") +
+  theme_minimal()
+```
+]
+ 
+.panel2-my_bar_not_useful-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_bar_not_useful_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_not_useful-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_not_useful-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_not_useful-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+* group_by(flu.shot.history, vaccination.intention)
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 475 x 15
+# Groups:   flu.shot.history, vaccination.intention [6]
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+* count()
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   flu.shot.history, vaccination.intention [6]
+  flu.shot.history vaccination.intention     n
+  &lt;fct&gt;            &lt;fct&gt;                 &lt;int&gt;
+1 No               Don't Know/Not sure      67
+2 No               No                       54
+3 No               Yes                      43
+4 Yes              Don't Know/Not sure      92
+5 Yes              No                       33
+6 Yes              Yes                     186
+```
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+* group_by(vaccination.intention)
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   vaccination.intention [3]
+  flu.shot.history vaccination.intention     n
+  &lt;fct&gt;            &lt;fct&gt;                 &lt;int&gt;
+1 No               Don't Know/Not sure      67
+2 No               No                       54
+3 No               Yes                      43
+4 Yes              Don't Know/Not sure      92
+5 Yes              No                       33
+6 Yes              Yes                     186
+```
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+* mutate(perc = 100*n/sum(n))
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 6 x 4
+# Groups:   vaccination.intention [3]
+  flu.shot.history vaccination.intention     n  perc
+  &lt;fct&gt;            &lt;fct&gt;                 &lt;int&gt; &lt;dbl&gt;
+1 No               Don't Know/Not sure      67  42.1
+2 No               No                       54  62.1
+3 No               Yes                      43  18.8
+4 Yes              Don't Know/Not sure      92  57.9
+5 Yes              No                       33  37.9
+6 Yes              Yes                     186  81.2
+```
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+* ggplot(aes(x = vaccination.intention, y = perc,
+*            fill = flu.shot.history))
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_bar_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = flu.shot.history)) +
+* geom_bar(position = "dodge", stat = "identity")
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_bar_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = flu.shot.history)) +
+  geom_bar(position = "dodge", stat = "identity") +
+* labs(x = "Vaccine Intention",
+*      y = "Percent of Individuals",
+*      title = "Figure 3: Relationship between COVID\nVaccine Intention and Flu Shot History")
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_bar_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = flu.shot.history)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Vaccine Intention",
+       y = "Percent of Individuals",
+       title = "Figure 3: Relationship between COVID\nVaccine Intention and Flu Shot History") +
+* scale_fill_manual(values = c("skyblue", "cornflowerblue"),
+*                   name = "Flu Shot History")
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_bar_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Grouped Bar Plot
+.panel1-my_2var_bar-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(flu.shot.history, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = flu.shot.history)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Vaccine Intention",
+       y = "Percent of Individuals",
+       title = "Figure 3: Relationship between COVID\nVaccine Intention and Flu Shot History") +
+  scale_fill_manual(values = c("skyblue", "cornflowerblue"),
+                    name = "Flu Shot History")
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_bar_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+# You Try it!
+
+Customize the bar graph of the vaccination intention and flu shot history with the Figure 2 code in your R Markdown file.
+
+* Copy and paste the code for flu.shot.history and Edit the code to:
+
+* Change the flu shot history variable to the `political.beliefs` variable
+
+* Change the colors of the bars by replacing "plum2", "plum3", "plum4" with the names of your favorite colors (e.g., orange) and add 3 more colors for all the categories of political beliefs. Try finding colors on the &lt;a href = "https://colorbrewer2.org/"&gt;https://colorbrewer2.org/&lt;/a&gt; website (HINT: Political beliefs has 6 colors, you'll need to add 3 more colors to the list!)
+
+* Add labels for the axes and a title inside the quote marks
+
+* Try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+
+---
+
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-answer_two-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+* group_by(political.beliefs, vaccination.intention)
+```
+]
+ 
+.panel2-answer_two-auto[
+
+```
+# A tibble: 475 x 15
+# Groups:   political.beliefs, vaccination.intention [18]
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+* count()
+```
+]
+ 
+.panel2-answer_two-auto[
+
+```
+# A tibble: 18 x 3
+# Groups:   political.beliefs, vaccination.intention [18]
+   political.beliefs     vaccination.intention     n
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt;
+ 1 Mixed                 Don't Know/Not sure      27
+ 2 Mixed                 No                       29
+ 3 Mixed                 Yes                      26
+ 4 Prefer not to answer  Don't Know/Not sure       8
+ 5 Prefer not to answer  No                       14
+ 6 Prefer not to answer  Yes                       3
+ 7 Somewhat Conservative Don't Know/Not sure      41
+ 8 Somewhat Conservative No                       20
+ 9 Somewhat Conservative Yes                      25
+10 Somewhat Liberal      Don't Know/Not sure      47
+11 Somewhat Liberal      No                        7
+12 Somewhat Liberal      Yes                      60
+13 Very Conservative     Don't Know/Not sure       5
+14 Very Conservative     No                        9
+15 Very Conservative     Yes                       3
+16 Very Liberal          Don't Know/Not sure      31
+17 Very Liberal          No                        8
+18 Very Liberal          Yes                     112
+```
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+* group_by(vaccination.intention)
+```
+]
+ 
+.panel2-answer_two-auto[
+
+```
+# A tibble: 18 x 3
+# Groups:   vaccination.intention [3]
+   political.beliefs     vaccination.intention     n
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt;
+ 1 Mixed                 Don't Know/Not sure      27
+ 2 Mixed                 No                       29
+ 3 Mixed                 Yes                      26
+ 4 Prefer not to answer  Don't Know/Not sure       8
+ 5 Prefer not to answer  No                       14
+ 6 Prefer not to answer  Yes                       3
+ 7 Somewhat Conservative Don't Know/Not sure      41
+ 8 Somewhat Conservative No                       20
+ 9 Somewhat Conservative Yes                      25
+10 Somewhat Liberal      Don't Know/Not sure      47
+11 Somewhat Liberal      No                        7
+12 Somewhat Liberal      Yes                      60
+13 Very Conservative     Don't Know/Not sure       5
+14 Very Conservative     No                        9
+15 Very Conservative     Yes                       3
+16 Very Liberal          Don't Know/Not sure      31
+17 Very Liberal          No                        8
+18 Very Liberal          Yes                     112
+```
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+* mutate(perc = 100*n/sum(n))
+```
+]
+ 
+.panel2-answer_two-auto[
+
+```
+# A tibble: 18 x 4
+# Groups:   vaccination.intention [3]
+   political.beliefs     vaccination.intention     n  perc
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt; &lt;dbl&gt;
+ 1 Mixed                 Don't Know/Not sure      27 17.0 
+ 2 Mixed                 No                       29 33.3 
+ 3 Mixed                 Yes                      26 11.4 
+ 4 Prefer not to answer  Don't Know/Not sure       8  5.03
+ 5 Prefer not to answer  No                       14 16.1 
+ 6 Prefer not to answer  Yes                       3  1.31
+ 7 Somewhat Conservative Don't Know/Not sure      41 25.8 
+ 8 Somewhat Conservative No                       20 23.0 
+ 9 Somewhat Conservative Yes                      25 10.9 
+10 Somewhat Liberal      Don't Know/Not sure      47 29.6 
+11 Somewhat Liberal      No                        7  8.05
+12 Somewhat Liberal      Yes                      60 26.2 
+13 Very Conservative     Don't Know/Not sure       5  3.14
+14 Very Conservative     No                        9 10.3 
+15 Very Conservative     Yes                       3  1.31
+16 Very Liberal          Don't Know/Not sure      31 19.5 
+17 Very Liberal          No                        8  9.20
+18 Very Liberal          Yes                     112 48.9 
+```
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+* ggplot(aes(x = vaccination.intention, y = perc,
+*            fill = political.beliefs))
+```
+]
+ 
+.panel2-answer_two-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = political.beliefs)) +
+* geom_bar(position = "dodge", stat = "identity")
+```
+]
+ 
+.panel2-answer_two-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = political.beliefs)) +
+  geom_bar(position = "dodge", stat = "identity") +
+* labs(x = "Vaccination Intention",
+*      y = "Percent of Individuals",
+*      title = "Relationship between COVID Vaccine Intention\nand Political Beliefs")
+```
+]
+ 
+.panel2-answer_two-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = political.beliefs)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Vaccination Intention",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+* scale_fill_manual(values = c("plum2","plum3","plum4",
+*                              "deeppink","lightblue","dodgerblue2"),
+*                   name = "Political Beliefs")
+```
+]
+ 
+.panel2-answer_two-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2
+.panel1-answer_two-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(vaccination.intention) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  ggplot(aes(x = vaccination.intention, y = perc,
+             fill = political.beliefs)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Vaccination Intention",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+  scale_fill_manual(values = c("plum2","plum3","plum4",
+                               "deeppink","lightblue","dodgerblue2"),
+                    name = "Political Beliefs")
+```
+]
+ 
+.panel2-answer_two-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-answer_two-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-answer_two-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-answer_two-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+* group_by(political.beliefs, vaccination.intention)
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 475 x 15
+# Groups:   political.beliefs, vaccination.intention [18]
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+* count()
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 18 x 3
+# Groups:   political.beliefs, vaccination.intention [18]
+   political.beliefs     vaccination.intention     n
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt;
+ 1 Mixed                 Don't Know/Not sure      27
+ 2 Mixed                 No                       29
+ 3 Mixed                 Yes                      26
+ 4 Prefer not to answer  Don't Know/Not sure       8
+ 5 Prefer not to answer  No                       14
+ 6 Prefer not to answer  Yes                       3
+ 7 Somewhat Conservative Don't Know/Not sure      41
+ 8 Somewhat Conservative No                       20
+ 9 Somewhat Conservative Yes                      25
+10 Somewhat Liberal      Don't Know/Not sure      47
+11 Somewhat Liberal      No                        7
+12 Somewhat Liberal      Yes                      60
+13 Very Conservative     Don't Know/Not sure       5
+14 Very Conservative     No                        9
+15 Very Conservative     Yes                       3
+16 Very Liberal          Don't Know/Not sure      31
+17 Very Liberal          No                        8
+18 Very Liberal          Yes                     112
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+* group_by(political.beliefs)
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 18 x 3
+# Groups:   political.beliefs [6]
+   political.beliefs     vaccination.intention     n
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt;
+ 1 Mixed                 Don't Know/Not sure      27
+ 2 Mixed                 No                       29
+ 3 Mixed                 Yes                      26
+ 4 Prefer not to answer  Don't Know/Not sure       8
+ 5 Prefer not to answer  No                       14
+ 6 Prefer not to answer  Yes                       3
+ 7 Somewhat Conservative Don't Know/Not sure      41
+ 8 Somewhat Conservative No                       20
+ 9 Somewhat Conservative Yes                      25
+10 Somewhat Liberal      Don't Know/Not sure      47
+11 Somewhat Liberal      No                        7
+12 Somewhat Liberal      Yes                      60
+13 Very Conservative     Don't Know/Not sure       5
+14 Very Conservative     No                        9
+15 Very Conservative     Yes                       3
+16 Very Liberal          Don't Know/Not sure      31
+17 Very Liberal          No                        8
+18 Very Liberal          Yes                     112
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+* mutate(perc = 100*n/sum(n))
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 18 x 4
+# Groups:   political.beliefs [6]
+   political.beliefs     vaccination.intention     n  perc
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt; &lt;dbl&gt;
+ 1 Mixed                 Don't Know/Not sure      27 32.9 
+ 2 Mixed                 No                       29 35.4 
+ 3 Mixed                 Yes                      26 31.7 
+ 4 Prefer not to answer  Don't Know/Not sure       8 32   
+ 5 Prefer not to answer  No                       14 56   
+ 6 Prefer not to answer  Yes                       3 12   
+ 7 Somewhat Conservative Don't Know/Not sure      41 47.7 
+ 8 Somewhat Conservative No                       20 23.3 
+ 9 Somewhat Conservative Yes                      25 29.1 
+10 Somewhat Liberal      Don't Know/Not sure      47 41.2 
+11 Somewhat Liberal      No                        7  6.14
+12 Somewhat Liberal      Yes                      60 52.6 
+13 Very Conservative     Don't Know/Not sure       5 29.4 
+14 Very Conservative     No                        9 52.9 
+15 Very Conservative     Yes                       3 17.6 
+16 Very Liberal          Don't Know/Not sure      31 20.5 
+17 Very Liberal          No                        8  5.30
+18 Very Liberal          Yes                     112 74.2 
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+* mutate(political.beliefs = factor(political.beliefs,
+*                                   levels=c("Very Liberal",
+*                                            "Somewhat Liberal",
+*                                            "Mixed",
+*                                            "Somewhat Conservative",
+*                                            "Very Conservative",
+*                                            "Prefer not to answer")))
+```
+]
+ 
+.panel2-answer_two_order-auto[
+
+```
+# A tibble: 18 x 4
+# Groups:   political.beliefs [6]
+   political.beliefs     vaccination.intention     n  perc
+   &lt;fct&gt;                 &lt;fct&gt;                 &lt;int&gt; &lt;dbl&gt;
+ 1 Mixed                 Don't Know/Not sure      27 32.9 
+ 2 Mixed                 No                       29 35.4 
+ 3 Mixed                 Yes                      26 31.7 
+ 4 Prefer not to answer  Don't Know/Not sure       8 32   
+ 5 Prefer not to answer  No                       14 56   
+ 6 Prefer not to answer  Yes                       3 12   
+ 7 Somewhat Conservative Don't Know/Not sure      41 47.7 
+ 8 Somewhat Conservative No                       20 23.3 
+ 9 Somewhat Conservative Yes                      25 29.1 
+10 Somewhat Liberal      Don't Know/Not sure      47 41.2 
+11 Somewhat Liberal      No                        7  6.14
+12 Somewhat Liberal      Yes                      60 52.6 
+13 Very Conservative     Don't Know/Not sure       5 29.4 
+14 Very Conservative     No                        9 52.9 
+15 Very Conservative     Yes                       3 17.6 
+16 Very Liberal          Don't Know/Not sure      31 20.5 
+17 Very Liberal          No                        8  5.30
+18 Very Liberal          Yes                     112 74.2 
+```
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+* ggplot(aes(x = political.beliefs, y = perc,
+*            fill = vaccination.intention))
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+* geom_bar(position = "dodge", stat = "identity")
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+  geom_bar(position = "dodge", stat = "identity") +
+* labs(x = "Political Beliefs",
+*      y = "Percent of Individuals",
+*      title = "Relationship between COVID Vaccine Intention\nand Political Beliefs")
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Political Beliefs",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+* scale_fill_manual(values = c("plum2","plum3","plum4"),
+*                   name = "Vaccination Intention",
+*                   guide = guide_legend(reverse = TRUE))
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Political Beliefs",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+  scale_fill_manual(values = c("plum2","plum3","plum4"),
+                    name = "Vaccination Intention",
+                    guide = guide_legend(reverse = TRUE)) +
+* theme_minimal()
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Political Beliefs",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+  scale_fill_manual(values = c("plum2","plum3","plum4"),
+                    name = "Vaccination Intention",
+                    guide = guide_legend(reverse = TRUE)) +
+  theme_minimal() +
+* coord_flip()
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_12_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer 2 Clarify
+.panel1-answer_two_order-auto[
+
+```r
+vaxxData %&gt;%
+  group_by(political.beliefs, vaccination.intention) %&gt;%
+  count() %&gt;%
+  group_by(political.beliefs) %&gt;%
+  mutate(perc = 100*n/sum(n)) %&gt;%
+  mutate(political.beliefs = factor(political.beliefs,
+                                    levels=c("Very Liberal",
+                                             "Somewhat Liberal",
+                                             "Mixed",
+                                             "Somewhat Conservative",
+                                             "Very Conservative",
+                                             "Prefer not to answer"))) %&gt;%
+  ggplot(aes(x = political.beliefs, y = perc,
+             fill = vaccination.intention)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Political Beliefs",
+       y = "Percent of Individuals",
+       title = "Relationship between COVID Vaccine Intention\nand Political Beliefs") +
+  scale_fill_manual(values = c("plum2","plum3","plum4"),
+                    name = "Vaccination Intention",
+                    guide = guide_legend(reverse = TRUE)) +
+  theme_minimal() +
+  coord_flip()
+```
+]
+ 
+.panel2-answer_two_order-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_two_order_auto_13_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-answer_two_order-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-answer_two_order-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-answer_two_order-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Basic Histogram
+.panel1-my_1var_histo-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_1var_histo-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Histogram
+.panel1-my_1var_histo-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = age))
+```
+]
+ 
+.panel2-my_1var_histo-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Histogram
+.panel1-my_1var_histo-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = age)) +
+* geom_histogram(binwidth = 1.5)
+```
+]
+ 
+.panel2-my_1var_histo-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Histogram
+.panel1-my_1var_histo-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 1.5) +
+* scale_fill_brewer(palette = 'Set2',
+*                   name = "Ages of Participants")
+```
+]
+ 
+.panel2-my_1var_histo-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Histogram
+.panel1-my_1var_histo-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 1.5) +
+  scale_fill_brewer(palette = 'Set2',
+                    name = "Ages of Participants")
+```
+]
+ 
+.panel2-my_1var_histo-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_1var_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_1var_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_1var_histo-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x= age))
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x= age)) +
+* geom_histogram(breaks=seq(10, 60, by = 1),
+*                col="blue",
+*                fill="slategrey",
+*                alpha = .2)
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x= age)) +
+  geom_histogram(breaks=seq(10, 60, by = 1),
+                 col="blue",
+                 fill="slategrey",
+                 alpha = .2) +
+* labs(title="Histogram of Age")
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x= age)) +
+  geom_histogram(breaks=seq(10, 60, by = 1),
+                 col="blue",
+                 fill="slategrey",
+                 alpha = .2) +
+  labs(title="Histogram of Age") +
+* labs(x="Age", y="Count")
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x= age)) +
+  geom_histogram(breaks=seq(10, 60, by = 1),
+                 col="blue",
+                 fill="slategrey",
+                 alpha = .2) +
+  labs(title="Histogram of Age") +
+  labs(x="Age", y="Count") +
+* xlim(c(18, 60))
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Fancy Histogram
+.panel1-my_1var_histo_fancy-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x= age)) +
+  geom_histogram(breaks=seq(10, 60, by = 1),
+                 col="blue",
+                 fill="slategrey",
+                 alpha = .2) +
+  labs(title="Histogram of Age") +
+  labs(x="Age", y="Count") +
+  xlim(c(18, 60))
+```
+]
+ 
+.panel2-my_1var_histo_fancy-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_1var_histo_fancy_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_1var_histo_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_1var_histo_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_1var_histo_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-figure_3-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention, y = age))
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+* geom_violin(aes(fill = vaccination.intention))
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(fill = vaccination.intention)) +
+* labs(y = "Age in Years",
+*      x = "Do You Intend to get the COVID-19 Vaccine?",
+*      title = "Figure 7: Vaccination Intention by Age")
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(fill = vaccination.intention)) +
+  labs(y = "Age in Years",
+       x = "Do You Intend to get the COVID-19 Vaccine?",
+       title = "Figure 7: Vaccination Intention by Age") +
+* scale_fill_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(fill = vaccination.intention)) +
+  labs(y = "Age in Years",
+       x = "Do You Intend to get the COVID-19 Vaccine?",
+       title = "Figure 7: Vaccination Intention by Age") +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+* theme_minimal()
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Basic Violin Plot
+.panel1-figure_3-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(fill = vaccination.intention)) +
+  labs(y = "Age in Years",
+       x = "Do You Intend to get the COVID-19 Vaccine?",
+       title = "Figure 7: Vaccination Intention by Age") +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+  theme_minimal()
+```
+]
+ 
+.panel2-figure_3-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/figure_3_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-figure_3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-figure_3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-figure_3-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = political.beliefs, y = age))
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+* geom_violin(aes(fill = political.beliefs))
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+  geom_violin(aes(fill = political.beliefs)) +
+* labs(y = "Age in Years", x = "Political Beliefs",
+*      title = "Figure 9: Political Beliefs by Age")
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+  geom_violin(aes(fill = political.beliefs)) +
+  labs(y = "Age in Years", x = "Political Beliefs",
+       title = "Figure 9: Political Beliefs by Age") +
+* scale_fill_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+  geom_violin(aes(fill = political.beliefs)) +
+  labs(y = "Age in Years", x = "Political Beliefs",
+       title = "Figure 9: Political Beliefs by Age") +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+* coord_flip()
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+  geom_violin(aes(fill = political.beliefs)) +
+  labs(y = "Age in Years", x = "Political Beliefs",
+       title = "Figure 9: Political Beliefs by Age") +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+  coord_flip() +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Horizontal Violin Plot
+.panel1-my_horizontal_violin-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = political.beliefs, y = age)) +
+  geom_violin(aes(fill = political.beliefs)) +
+  labs(y = "Age in Years", x = "Political Beliefs",
+       title = "Figure 9: Political Beliefs by Age") +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+  coord_flip() +
+  theme_minimal()
+```
+]
+ 
+.panel2-my_horizontal_violin-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_horizontal_violin_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_horizontal_violin-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_horizontal_violin-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_horizontal_violin-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = vaccination.intention, y = age))
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+* geom_violin(aes(color = vaccination.intention), fill = "white",
+*             alpha = .8)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+* geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+*              alpha = .3)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+* geom_jitter(aes(color = vaccination.intention), alpha = .4)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+  geom_jitter(aes(color = vaccination.intention), alpha = .4) +
+* labs(x = "Vaccination Intention",
+*      y = "Age (in years)",
+*      title = "Figure 6: Vaccination Intention by Age")
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+  geom_jitter(aes(color = vaccination.intention), alpha = .4) +
+  labs(x = "Vaccination Intention",
+       y = "Age (in years)",
+       title = "Figure 6: Vaccination Intention by Age") +
+* scale_color_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+  geom_jitter(aes(color = vaccination.intention), alpha = .4) +
+  labs(x = "Vaccination Intention",
+       y = "Age (in years)",
+       title = "Figure 6: Vaccination Intention by Age") +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+* scale_fill_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+  geom_jitter(aes(color = vaccination.intention), alpha = .4) +
+  labs(x = "Vaccination Intention",
+       y = "Age (in years)",
+       title = "Figure 6: Vaccination Intention by Age") +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Super Fancy Boxplot &amp; Violin Plot 
+.panel1-my_2var_fancy_boxplot-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = vaccination.intention, y = age)) +
+  geom_violin(aes(color = vaccination.intention), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = vaccination.intention, fill = vaccination.intention),
+               alpha = .3) +
+  geom_jitter(aes(color = vaccination.intention), alpha = .4) +
+  labs(x = "Vaccination Intention",
+       y = "Age (in years)",
+       title = "Figure 6: Vaccination Intention by Age") +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+  theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_fancy_boxplot-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/my_2var_fancy_boxplot_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_fancy_boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_fancy_boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_fancy_boxplot-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+# You Try it!
+
+Edit the Super Fancy Boxplot &amp; Violin Plot code to: 
+
+* Change the categorical variable (keep age). Remember to change it everywhere it shows up!
+
+* Change the colors by replacing the Set2 palette with a different palette found on the &lt;a href = "http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/"&gt;http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/&lt;/a&gt; website (bottom of page). Remember to change it everywhere it shows up!
+
+* Add labels for the axes and a title inside the quote marks
+
+* Try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+---
+
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+*vaxxData
+```
+]
+ 
+.panel2-answer_three-auto[
+
+```
+# A tibble: 475 x 15
+   vaccination.int… flu.shot.history positive.test innoculation.lo…
+   &lt;fct&gt;            &lt;fct&gt;            &lt;fct&gt;         &lt;fct&gt;           
+ 1 Yes              Yes              Yes           Chain Pharmacie…
+ 2 Yes              Yes              Yes           Chain Pharmacie…
+ 3 Yes              Yes              No            worksite        
+ 4 Don't Know/Not … No               Yes           Primary Care Do…
+ 5 Yes              Yes              Yes           Primary Care Do…
+ 6 Yes              Yes              Yes           Local Health De…
+ 7 Don't Know/Not … No               Yes           Primary Care Do…
+ 8 Yes              Yes              Yes           Primary Care Do…
+ 9 Don't Know/Not … Yes              Yes           Local Health De…
+10 No               Yes              No            Local Health De…
+# … with 465 more rows, and 11 more variables: preexisting.condition &lt;fct&gt;,
+#   perceived.severity &lt;fct&gt;, education.level &lt;fct&gt;, perceived.benefit &lt;fct&gt;,
+#   political.beliefs &lt;fct&gt;, perceived.barriers &lt;fct&gt;, wears.mask &lt;fct&gt;,
+#   perceived.susceptibility &lt;fct&gt;, gender &lt;fct&gt;, age &lt;dbl&gt;, age.cat &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+* ggplot(aes(x = perceived.severity, y = age))
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+* geom_violin(aes(color = perceived.severity), fill = "white",
+*             alpha = .8)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+* geom_boxplot(aes(color = perceived.severity,
+*                  fill = perceived.severity),
+*              alpha = .3)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+* geom_jitter(aes(color = perceived.severity), alpha = .4)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+* labs(x = "",
+*      y = "Age (in years)",
+*      title = "")
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+  labs(x = "",
+       y = "Age (in years)",
+       title = "") +
+* scale_color_brewer(palette = "BuPu", guide = FALSE)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+  labs(x = "",
+       y = "Age (in years)",
+       title = "") +
+  scale_color_brewer(palette = "BuPu", guide = FALSE) +
+* scale_fill_brewer(palette = "BuPu", guide = FALSE)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+  labs(x = "",
+       y = "Age (in years)",
+       title = "") +
+  scale_color_brewer(palette = "BuPu", guide = FALSE) +
+  scale_fill_brewer(palette = "BuPu", guide = FALSE) +
+* theme_dark(base_size = 14)
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+  labs(x = "",
+       y = "Age (in years)",
+       title = "") +
+  scale_color_brewer(palette = "BuPu", guide = FALSE) +
+  scale_fill_brewer(palette = "BuPu", guide = FALSE) +
+  theme_dark(base_size = 14) +
+* theme(axis.text.x = element_text(angle = -15))
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+### Answer Three
+.panel1-answer_three-auto[
+
+```r
+vaxxData %&gt;%
+  ggplot(aes(x = perceived.severity, y = age)) +
+  geom_violin(aes(color = perceived.severity), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = perceived.severity,
+                   fill = perceived.severity),
+               alpha = .3) +
+  geom_jitter(aes(color = perceived.severity), alpha = .4) +
+  labs(x = "",
+       y = "Age (in years)",
+       title = "") +
+  scale_color_brewer(palette = "BuPu", guide = FALSE) +
+  scale_fill_brewer(palette = "BuPu", guide = FALSE) +
+  theme_dark(base_size = 14) +
+  theme(axis.text.x = element_text(angle = -15))
+```
+]
+ 
+.panel2-answer_three-auto[
+![](Vaccination-Intention-Flipbookr_files/figure-html/answer_three_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-answer_three-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-answer_three-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-answer_three-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+---
+
+
+## The End
+
+## Thank you!!
+
+
+&lt;!-- adjust font size in this css code chunk, currently 80 --&gt;
+
+&lt;style type="text/css"&gt;
+.remark-code{line-height: 1.5; font-size: 80%}
+
+@media print {
+  .has-continuation {
+    display: block;
+  }
+}
+
+code.r.hljs.remark-code{
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+code.r.hljs.remark-code:hover{
+  overflow-x:visible;
+  width: 500px;
+  border-style: solid;
+}
+&lt;/style&gt;
+
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
